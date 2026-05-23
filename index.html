@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>강의 만족도 조사</title>
+
+<style>
+    *{
+        margin:0;
+        padding:0;
+        box-sizing:border-box;
+        font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",
+        "Pretendard",sans-serif;
+    }
+
+    body{
+        background:linear-gradient(135deg,#1c1c1e,#2c2c2e);
+        min-height:100vh;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        color:white;
+        padding:30px;
+    }
+
+    .wrapper{
+        display:flex;
+        gap:30px;
+        align-items:flex-start;
+        flex-wrap:wrap;
+        justify-content:center;
+    }
+
+    /* 만족도 카드 */
+    .survey-card{
+        width:420px;
+        background:rgba(255,255,255,0.08);
+        backdrop-filter:blur(18px);
+        border:1px solid rgba(255,255,255,0.1);
+        border-radius:28px;
+        padding:40px;
+        box-shadow:0 10px 40px rgba(0,0,0,0.35);
+    }
+
+    h1{
+        text-align:center;
+        margin-bottom:35px;
+        font-size:32px;
+        letter-spacing:-1px;
+    }
+
+    .button-group{
+        display:flex;
+        justify-content:center;
+        gap:18px;
+        margin-bottom:40px;
+    }
+
+    button{
+        border:none;
+        padding:16px 28px;
+        border-radius:18px;
+        font-size:17px;
+        font-weight:700;
+        cursor:pointer;
+        transition:0.25s;
+    }
+
+    button:hover{
+        transform:translateY(-3px);
+    }
+
+    .good-btn{
+        background:white;
+        color:#111;
+    }
+
+    .bad-btn{
+        background:#3b3b3d;
+        color:white;
+    }
+
+    .stat-item{
+        margin-bottom:25px;
+    }
+
+    .label-row{
+        display:flex;
+        justify-content:space-between;
+        margin-bottom:10px;
+        font-size:16px;
+    }
+
+    .bar-bg{
+        width:100%;
+        height:22px;
+        background:rgba(255,255,255,0.12);
+        border-radius:999px;
+        overflow:hidden;
+    }
+
+    .bar{
+        height:100%;
+        width:0%;
+        transition:0.4s;
+    }
+
+    .good-bar{
+        background:linear-gradient(90deg,#ffffff,#d7d7d7);
+    }
+
+    .bad-bar{
+        background:linear-gradient(90deg,#666,#999);
+    }
+
+    .total{
+        margin-top:15px;
+        text-align:center;
+        color:#d0d0d0;
+        font-size:15px;
+    }
+
+    /* 테트리스 카드 */
+    .game-card{
+        width:360px;
+        background:rgba(255,255,255,0.08);
+        backdrop-filter:blur(18px);
+        border:1px solid rgba(255,255,255,0.1);
+        border-radius:28px;
+        padding:25px;
+        box-shadow:0 10px 40px rgba(0,0,0,0.35);
+        text-align:center;
+    }
+
+    .game-title{
+        font-size:28px;
+        margin-bottom:20px;
+        font-weight:700;
+    }
+
+    canvas{
+        background:#000;
+        border-radius:20px;
+        border:1px solid rgba(255,255,255,0.08);
+        display:block;
+        margin:0 auto;
+    }
+
+    .guide{
+        margin-top:18px;
+        font-size:15px;
+        color:#cfcfcf;
+        line-height:1.8;
+    }
+
+</style>
+</head>
+
+<body>
+
+<div class="wrapper">
+
+    <!-- 만족도 조사 -->
+    <div class="survey-card">
+
+        <h1>강의 만족도 조사</h1>
+
+        <div class="button-group">
+            <button class="good-btn" onclick="voteGood()">만족</button>
+            <button class="bad-btn" onclick="voteBad()">불만족</button>
+        </div>
+
+        <div class="stat-item">
+            <div class="label-row">
+                <span>만족</span>
+                <span id="goodCount">0</span>
+            </div>
+
+            <div class="bar-bg">
+                <div class="bar good-bar" id="goodBar"></div>
+            </div>
+        </div>
+
+        <div class="stat-item">
+            <div class="label-row">
+                <span>불만족</span>
+                <span id="badCount">0</span>
+            </div>
+
+            <div class="bar-bg">
+                <div class="bar bad-bar" id="badBar"></div>
+            </div>
+        </div>
+
+        <div class="total">
+            총 응답 수 :
+            <span id="totalCount">0</span>
+        </div>
+
+    </div>
+
+    <!-- 테트리스 -->
+    <div class="game-card">
+
+        <div class="game-title">미니 테트리스</div>
+
+        <canvas id="tetris"></canvas>
+
+        <div class="guide">
+            ← → 이동<br>
+            ↓ 빠르게 내리기<br>
+            ↑ 회전
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+/* =========================
+   만족도 조사
+========================= */
+
+let good = 0;
+let bad = 0;
+
+function voteGood(){
+
+    good++;
+    updateUI();
+}
+
+function voteBad(){
+
+    bad++;
+    updateUI();
+}
+
+function updateUI(){
+
+    const total = good + bad;
+
+    const goodPercent =
+        total === 0 ? 0 : (good / total) * 100;
+
+    const badPercent =
+        total === 0 ? 0 : (bad / total) * 100;
+
+    document.getElementById("goodCount").innerText = good;
+    document.getElementById("badCount").innerText = bad;
+    document.getElementById("totalCount").innerText = total;
+
+    document.getElementById("goodBar").style.width =
+        goodPercent + "%";
+
+    document.getElementById("badBar").style.width =
+        badPercent + "%";
+}
+
+/* =========================
+   테트리스
+========================= */
+
+const canvas = document.getElementById('tetris');
+const context = canvas.getContext('2d');
+
+const ROWS = 20;
+const COLS = 12;
+const BLOCK = 20;
+
+/* 중요 수정 */
+canvas.width = COLS * BLOCK;
+canvas.height = ROWS * BLOCK;
+
+const arena = createMatrix(COLS, ROWS);
+
+const colors = [
+    null,
+    '#FFFFFF',
+    '#BBBBBB',
+    '#888888',
+    '#DDDDDD',
+    '#666666',
+    '#999999',
+    '#CCCCCC'
+];
+
+const pieces = 'TJLOSZI';
+
+const player = {
+    pos: {x:0, y:0},
+    matrix:null
+};
+
+function createMatrix(w, h){
+
+    const matrix = [];
+
+    while(h--){
+        matrix.push(new Array(w).fill(0));
+    }
+
+    return matrix;
+}
+
+function createPiece(type){
+
+    if(type === 'T'){
+        return [
+            [0,1,0],
+            [1,1,1],
+            [0,0,0]
+        ];
+    }
+
+    if(type === 'O'){
+        return [
+            [2,2],
+            [2,2]
+        ];
+    }
+
+    if(type === 'L'){
+        return [
+            [0,3,0],
+            [0,3,0],
+            [0,3,3]
+        ];
+    }
+
+    if(type === 'J'){
+        return [
+            [0,4,0],
+            [0,4,0],
+            [4,4,0]
+        ];
+    }
+
+    if(type === 'I'){
+        return [
+            [0,5,0,0],
+            [0,5,0,0],
+            [0,5,0,0],
+            [0,5,0,0]
+        ];
+    }
+
+    if(type === 'S'){
+        return [
+            [0,6,6],
+            [6,6,0],
+            [0,0,0]
+        ];
+    }
+
+    if(type === 'Z'){
+        return [
+            [7,7,0],
+            [0,7,7],
+            [0,0,0]
+        ];
+    }
+}
+
+function collide(arena, player){
+
+    const [m,o] = [player.matrix, player.pos];
+
+    for(let y=0; y<m.length; ++y){
+
+        for(let x=0; x<m[y].length; ++x){
+
+            if(
+                m[y][x] !== 0 &&
+                (
+                    arena[y + o.y] &&
+                    arena[y + o.y][x + o.x]
+                ) !== 0
+            ){
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+function merge(arena, player){
+
+    player.matrix.forEach((row,y)=>{
+
+        row.forEach((value,x)=>{
+
+            if(value !== 0){
+
+                arena[y + player.pos.y][x + player.pos.x] = value;
+            }
+        });
+    });
+}
+
+function arenaSweep(){
+
+    outer:
+    for(let y = arena.length - 1; y > 0; --y){
+
+        for(let x = 0; x < arena[y].length; ++x){
+
+            if(arena[y][x] === 0){
+                continue outer;
+            }
+        }
+
+        const row = arena.splice(y,1)[0].fill(0);
+
+        arena.unshift(row);
+
+        ++y;
+    }
+}
+
+function rotate(matrix){
+
+    for(let y=0; y<matrix.length; ++y){
+
+        for(let x=0; x<y; ++x){
+
+            [
+                matrix[x][y],
+                matrix[y][x]
+
+            ] = [
+
+                matrix[y][x],
+                matrix[x][y]
+            ];
+        }
+    }
+
+    matrix.forEach(row => row.reverse());
+}
+
+function playerReset(){
+
+    const piece =
+        pieces[pieces.length * Math.random() | 0];
+
+    player.matrix = createPiece(piece);
+
+    player.pos.y = 0;
+
+    player.pos.x =
+        (COLS / 2 | 0) -
+        (player.matrix[0].length / 2 | 0);
+
+    if(collide(arena, player)){
+
+        arena.forEach(row => row.fill(0));
+    }
+}
+
+function playerMove(dir){
+
+    player.pos.x += dir;
+
+    if(collide(arena, player)){
+
+        player.pos.x -= dir;
+    }
+}
+
+function playerDrop(){
+
+    player.pos.y++;
+
+    if(collide(arena, player)){
+
+        player.pos.y--;
+
+        merge(arena, player);
+
+        arenaSweep();
+
+        playerReset();
+    }
+
+    dropCounter = 0;
+}
+
+function playerRotate(){
+
+    const pos = player.pos.x;
+
+    let offset = 1;
+
+    rotate(player.matrix);
+
+    while(collide(arena, player)){
+
+        player.pos.x += offset;
+
+        offset = -(offset + (offset > 0 ? 1 : -1));
+
+        if(offset > player.matrix[0].length){
+
+            rotate(player.matrix);
+            rotate(player.matrix);
+            rotate(player.matrix);
+
+            player.pos.x = pos;
+
+            return;
+        }
+    }
+}
+
+function drawMatrix(matrix, offset){
+
+    matrix.forEach((row,y)=>{
+
+        row.forEach((value,x)=>{
+
+            if(value !== 0){
+
+                context.fillStyle = colors[value];
+
+                context.fillRect(
+                    (x + offset.x) * BLOCK,
+                    (y + offset.y) * BLOCK,
+                    BLOCK,
+                    BLOCK
+                );
+
+                context.strokeStyle = "#111";
+
+                context.strokeRect(
+                    (x + offset.x) * BLOCK,
+                    (y + offset.y) * BLOCK,
+                    BLOCK,
+                    BLOCK
+                );
+            }
+        });
+    });
+}
+
+function draw(){
+
+    context.fillStyle = "#000";
+
+    context.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    drawMatrix(arena, {x:0,y:0});
+
+    drawMatrix(player.matrix, player.pos);
+}
+
+let dropCounter = 0;
+let dropInterval = 600;
+let lastTime = 0;
+
+function update(time = 0){
+
+    const deltaTime = time - lastTime;
+
+    lastTime = time;
+
+    dropCounter += deltaTime;
+
+    if(dropCounter > dropInterval){
+
+        playerDrop();
+    }
+
+    draw();
+
+    requestAnimationFrame(update);
+}
+
+/* 키보드 조작 */
+
+document.addEventListener('keydown', event => {
+
+    if(event.key === 'ArrowLeft'){
+
+        playerMove(-1);
+    }
+
+    else if(event.key === 'ArrowRight'){
+
+        playerMove(1);
+    }
+
+    else if(event.key === 'ArrowDown'){
+
+        playerDrop();
+    }
+
+    else if(event.key === 'ArrowUp'){
+
+        playerRotate();
+    }
+});
+
+/* 시작 */
+
+playerReset();
+draw();
+update();
+
+</script>
+
+</body>
+</html>
